@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Blest
+Exec=/usr/bin/blest
+Icon=/usr/share/icons/hicolor/256x256/apps/blest.webp
+Type=Application
+Categories=Game;
+Terminal=false

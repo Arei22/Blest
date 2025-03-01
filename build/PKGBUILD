@@ -1,12 +1,12 @@
 # Maintainer: Arei2
-pkgname=Blest
+pkgname=blest
 pkgver=0.1.0
 pkgrel=1
 pkgdesc="A simple minesweeper"
 arch=('x86_64')
-url=''
-license=()
-makedepends=('cargo')
+url='https://github.com/arei22/Blest'
+license=('GPL-3.0')
+makedepends=()
 depends=()
 arch=('i686' 'x86_64' 'armv6h' 'armv7h')
 source=()
@@ -28,8 +28,10 @@ check() {
     cargo test --frozen --all-features
 }
 
-package() {
+package() { 
     install -Dm0755 -t "$pkgdir/usr/bin/" "target/release/$pkgname"
-    # for custom license, e.g. MIT
-    # install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    cd ../
+    install -Dm644 "ressources/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    install -Dm644 "ressources/blest.desktop" "$pkgdir/usr/share/applications/blest.desktop"
+    install -Dm644 "ressources/blest.webp" "$pkgdir/usr/share/icons/hicolor/256x256/apps/blest.webp"
 }

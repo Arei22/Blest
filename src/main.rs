@@ -1,12 +1,12 @@
 // pour faire plusieur grosse cellule utiliser hashmap
 
 use bevy::{
+    DefaultPlugins,
     app::{App, FixedUpdate, Startup},
     render::camera::ClearColor,
-    DefaultPlugins,
 };
-use minesweeper::{consts::r#const::BACKGROUND_COLOR, resources::resource::Grid};
-use minesweeper::{
+use blest::{consts::r#const::BACKGROUND_COLOR, resources::resource::Grid};
+use blest::{
     consts::r#const::DIMENSION_CELL,
     systems::{setup, subcell},
 };
