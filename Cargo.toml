@@ -3,6 +3,24 @@ name = "blest"
 version = "0.1.0"
 edition = "2024"
 
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+
 [dependencies]
-bevy = "0.15.3"
+bevy = { version = "0.15.3", default-features = false, features = [
+    "bevy_gizmos",
+    "bevy_render",
+    "bevy_state",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_window",
+    "bevy_winit",
+    "default_font",
+    "multi_threaded",
+    "sysinfo_plugin",
+    "x11",
+    "dynamic_linking",
+] }
 rand = "0.9.0"
