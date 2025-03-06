@@ -73,7 +73,6 @@ pub fn generate_mine(grid: &mut Grid, x: f32, y: f32, offset_mines: f32, mines: 
             )),
         )
         .floor() as i32;
-        println!("mine avant : {mine}");
         mine = do_offset_mines(mine, offset_mines as i32, &mines);
         if mine >= pos_index + x_offset as i32 {
             mine += 3 + mine_offset;
@@ -90,7 +89,6 @@ pub fn generate_mine(grid: &mut Grid, x: f32, y: f32, offset_mines: f32, mines: 
             )),
         )
         .floor() as i32;
-        println!("mine avant : {mine}");
 
         mine = do_offset_mines(mine, offset_mines as i32, &mines);
         if mine >= (y - 1.).mul_add(DIMENSION_CELL.0, x + x_offset) as i32 {
@@ -108,7 +106,6 @@ pub fn generate_mine(grid: &mut Grid, x: f32, y: f32, offset_mines: f32, mines: 
             )),
         )
         .floor() as i32;
-        println!("mine avant : {mine}");
         mine = do_offset_mines(mine, offset_mines as i32, &mines);
         if mine >= (y - 1.).mul_add(DIMENSION_CELL.0, x + x_offset) as i32 {
             mine += 3 + mine_offset;
@@ -135,8 +132,6 @@ pub fn generate_grid(grid: &mut Grid, x: f32, y: f32) {
     rand::rng();
 
     let nb_mines = random_range(MIN_MINE..(MAX_MINE + 1));
-    println!("click : {}", y.mul_add(DIMENSION_CELL.0, x) as i32);
-    println!("nb : {nb_mines}");
     let mut mines: Vec<i32> = Vec::new();
 
     let mut i = 0.;
@@ -144,7 +139,6 @@ pub fn generate_grid(grid: &mut Grid, x: f32, y: f32) {
         mines.push(generate_mine(grid, x, y, i, mines.clone()));
         mines.sort_unstable();
         i += 1.;
-        println!("mine final : {}", mines[(i - 1.) as usize]);
     }
 }
 
