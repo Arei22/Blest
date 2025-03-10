@@ -38,7 +38,8 @@ pub fn set_value(grid: &mut Grid, mine: i32) {
     }
 }
 
-pub fn do_offset_mines(mut mine: i32, offset_mines: i32, mines: Vec<i32>) -> i32 {
+#[must_use]
+pub fn do_offset_mines(mut mine: i32, offset_mines: i32, mines: &[i32]) -> i32 {
     for i in 0..offset_mines {
         if mine >= mines[i as usize] {
             mine += 1;
@@ -47,15 +48,13 @@ pub fn do_offset_mines(mut mine: i32, offset_mines: i32, mines: Vec<i32>) -> i32
     mine
 }
 
-pub fn generate_mine(grid: &mut Grid, x: f32, offset_mines: f32, mines: Vec<i32>) -> i32 {
+pub fn generate_mine(grid: &mut Grid, x: f32, offset_mines: f32, mines: &[i32]) -> i32 {
     let mut mine: i32;
 
     let mut rand_factor: f32 = 0.;
     let error_margin = 1.;
 
-    if (x - (DIMENSION_CELL.0 - 1.)).abs() < error_margin {
-        rand_factor = 1.;
-    } else if x == 0. {
+    if (x - (DIMENSION_CELL.0 - 1.)).abs() < error_margin || x == 0. {
         rand_factor = 1.;
     }
 
@@ -78,28 +77,28 @@ pub fn generate_mine(grid: &mut Grid, x: f32, offset_mines: f32, mines: Vec<i32>
 pub fn generate_grid(grid: &mut Grid, x: f32, y: f32) {
     rand::rng();
 
-    let nb_mines = random_range(MIN_MINE..(MAX_MINE + 1));
-    let mut mines: Vec<i32> = Vec::new();
+    let nb_mines = random_range(MIN_MINE..=MAX_MINE);
+    let mut mines: Vec<i32> = Vec::with_capacity(nb_mines as usize);
 
     let error_margin = 1.;
-    let mut x_start = -1;
-    let mut x_end = 2;
-    let mut y_start = -1;
-    let mut y_end = 2;
+    let mut x_start: f32 = -1.;
+    let mut x_end: f32 = 2.;
+    let mut y_start: f32 = -1.;
+    let mut y_end: f32 = 2.;
 
     if (x - (DIMENSION_CELL.0 - 1.)).abs() < error_margin {
-        x_end -= 1;
+        x_end -= 1.;
     } else if x == 0. {
-        x_start += 1;
+        x_start += 1.;
     }
     if (y - (DIMENSION_CELL.1 - 1.)).abs() < error_margin {
-        y_end -= 1;
+        y_end -= 1.;
     } else if x == 0. {
-        y_start += 1;
+        y_start += 1.;
     }
 
-    for i in x_start..x_end {
-        for j in y_start..y_end {
+    for i in (x_start as i32)..(x_end as i32) {
+        for j in (y_start as i32)..(y_end as i32) {
             mines.push((y as i32 + i) * DIMENSION_CELL.0 as i32 + (x as i32 + j));
         }
     }
@@ -109,8 +108,8 @@ pub fn generate_grid(grid: &mut Grid, x: f32, y: f32) {
         mines.push(generate_mine(
             grid,
             x,
-            i + ((x_end - x_start) * (y_end - y_start)) as f32,
-            mines.clone(),
+            (x_end - x_start).mul_add(y_end - y_start, i),
+            &mines.clone(),
         ));
         mines.sort_unstable();
         i += 1.;
