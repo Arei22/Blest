@@ -38,7 +38,7 @@ pub fn set_value(grid: &mut Grid, mine: i32) {
     }
 }
 
-pub fn do_offset_mines(mut mine: i32, offset_mines: i32, mines: &Vec<i32>) -> i32 {
+pub fn do_offset_mines(mut mine: i32, offset_mines: i32, mines: Vec<i32>) -> i32 {
     for i in 0..offset_mines {
         if mine >= mines[i as usize] {
             mine += 1;
@@ -47,80 +47,27 @@ pub fn do_offset_mines(mut mine: i32, offset_mines: i32, mines: &Vec<i32>) -> i3
     mine
 }
 
-pub fn generate_mine(grid: &mut Grid, x: f32, y: f32, offset_mines: f32, mines: Vec<i32>) -> i32 {
+pub fn generate_mine(grid: &mut Grid, x: f32, offset_mines: f32, mines: Vec<i32>) -> i32 {
     let mut mine: i32;
-    let pos_index = y.mul_add(DIMENSION_CELL.0, x) as i32;
 
     let mut rand_factor: f32 = 0.;
-    let mut mine_offset = 0;
-    let mut x_offset = -1.;
     let error_margin = 1.;
 
     if (x - (DIMENSION_CELL.0 - 1.)).abs() < error_margin {
         rand_factor = 1.;
-        mine_offset = -1;
     } else if x == 0. {
         rand_factor = 1.;
-        mine_offset = -1;
-        x_offset = 0.;
     }
 
-    if y == 0. {
-        mine = random_range(
-            (0.)..(DIMENSION_CELL.0.mul_add(
-                DIMENSION_CELL.1,
-                rand_factor.mul_add(2., -6.) - offset_mines,
-            )),
-        )
-        .floor() as i32;
-        mine = do_offset_mines(mine, offset_mines as i32, &mines);
-        if mine >= pos_index + x_offset as i32 {
-            mine += 3 + mine_offset;
-        }
-        mine = do_offset_mines(mine, offset_mines as i32, &mines);
-        if mine >= (y + 1.).mul_add(DIMENSION_CELL.0, x + x_offset) as i32 {
-            mine += 3 + mine_offset;
-        }
-    } else if (y - (DIMENSION_CELL.1 - 1.)).abs() < error_margin {
-        mine = random_range(
-            (0.)..(DIMENSION_CELL.0.mul_add(
-                DIMENSION_CELL.1,
-                rand_factor.mul_add(2., -6.) - offset_mines,
-            )),
-        )
-        .floor() as i32;
+    mine = random_range(
+        (0.)..(DIMENSION_CELL.0.mul_add(
+            DIMENSION_CELL.1,
+            rand_factor.mul_add(2., -6.) - offset_mines,
+        )),
+    )
+    .floor() as i32;
 
-        mine = do_offset_mines(mine, offset_mines as i32, &mines);
-        if mine >= (y - 1.).mul_add(DIMENSION_CELL.0, x + x_offset) as i32 {
-            mine += 3 + mine_offset;
-        }
-        mine = do_offset_mines(mine, offset_mines as i32, &mines);
-        if mine >= pos_index + x_offset as i32 {
-            mine += 3 + mine_offset;
-        }
-    } else {
-        mine = random_range(
-            (0.)..(DIMENSION_CELL.0.mul_add(
-                DIMENSION_CELL.1,
-                rand_factor.mul_add(3., -9.) - offset_mines,
-            )),
-        )
-        .floor() as i32;
-        mine = do_offset_mines(mine, offset_mines as i32, &mines);
-        if mine >= (y - 1.).mul_add(DIMENSION_CELL.0, x + x_offset) as i32 {
-            mine += 3 + mine_offset;
-        }
-        mine = do_offset_mines(mine, offset_mines as i32, &mines);
-        if mine >= pos_index + x_offset as i32 {
-            mine += 3 + mine_offset;
-        }
-        mine = do_offset_mines(mine, offset_mines as i32, &mines);
-        if mine >= (y + 1.).mul_add(DIMENSION_CELL.0, x + x_offset) as i32 {
-            mine += 3 + mine_offset;
-        }
-    }
-
-    mine = do_offset_mines(mine, offset_mines as i32, &mines);
+    mine = do_offset_mines(mine, offset_mines as i32, mines);
     mine %= (DIMENSION_CELL.0 * DIMENSION_CELL.1) as i32;
 
     set_value(grid, mine);
@@ -134,9 +81,37 @@ pub fn generate_grid(grid: &mut Grid, x: f32, y: f32) {
     let nb_mines = random_range(MIN_MINE..(MAX_MINE + 1));
     let mut mines: Vec<i32> = Vec::new();
 
+    let error_margin = 1.;
+    let mut x_start = -1;
+    let mut x_end = 2;
+    let mut y_start = -1;
+    let mut y_end = 2;
+
+    if (x - (DIMENSION_CELL.0 - 1.)).abs() < error_margin {
+        x_end -= 1;
+    } else if x == 0. {
+        x_start += 1;
+    }
+    if (y - (DIMENSION_CELL.1 - 1.)).abs() < error_margin {
+        y_end -= 1;
+    } else if x == 0. {
+        y_start += 1;
+    }
+
+    for i in x_start..x_end {
+        for j in y_start..y_end {
+            mines.push((y as i32 + i) * DIMENSION_CELL.0 as i32 + (x as i32 + j));
+        }
+    }
+
     let mut i = 0.;
     while (i as i32) < nb_mines {
-        mines.push(generate_mine(grid, x, y, i, mines.clone()));
+        mines.push(generate_mine(
+            grid,
+            x,
+            i + ((x_end - x_start) * (y_end - y_start)) as f32,
+            mines.clone(),
+        ));
         mines.sort_unstable();
         i += 1.;
     }
