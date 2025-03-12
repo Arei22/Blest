@@ -124,9 +124,38 @@ jobs:
 
       - name: Upload executable to release
         uses: softprops/action-gh-release@v1
+        id: upload_linux_executable
         with:
           files: blest-${{ steps.app_version.outputs.APP_VERSION }}-${{ matrix.target }}
           tag_name: ${{ steps.app_version.outputs.APP_VERSION }}
+
+      - name: Replace placeholders in PKGBUILD
+        run: |
+          sed -i "s#%URL%#${{ steps.upload_linux_executable.outputs.url }}#g" build/PKGBUILD
+          sed -i "s/%VERSION%/${{ steps.app_version.outputs.APP_VERSION }}/g" build/PKGBUILD
+          sed -i "s/%TARGET%/${{ matrix.target }}/g" build/PKGBUILD
+          sed -i "s/%EXEC_B2SUM%/$(b2sum 'blest-${{ steps.app_version.outputs.APP_VERSION }}-${{ matrix.target }}' | awk '{print $1}')/g" build/PKGBUILD
+        if: contains('aarch64-unknown-linux-gnu i686-unknown-linux-gnu x86_64-unknown-linux-gnu', matrix.target)
+      
+      - name: Build pacman package
+        uses: 2m/arch-pkgbuild-builder@v1.16
+        with:
+          target: 'pkgbuild'
+          pkgname: 'build/'
+        if: contains('aarch64-unknown-linux-gnu i686-unknown-linux-gnu x86_64-unknown-linux-gnu', matrix.target)
+
+      - name: Renaming package
+        run: |
+          cd build
+          mv *.pkg.tar.zst blest-${{ steps.app_version.outputs.APP_VERSION }}-pacman-x86_64.pkg.tar.zst
+        if: contains('aarch64-unknown-linux-gnu i686-unknown-linux-gnu x86_64-unknown-linux-gnu', matrix.target)
+
+      - name: Upload package to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build/blest-${{ steps.app_version.outputs.APP_VERSION }}-pacman-x86_64.pkg.tar.zst
+          tag_name: ${{ steps.app_version.outputs.APP_VERSION }}
+        if: contains('aarch64-unknown-linux-gnu i686-unknown-linux-gnu x86_64-unknown-linux-gnu', matrix.target)
 
   generate-macos-executables:
     name: Build & publish for ${{ matrix.name }}
