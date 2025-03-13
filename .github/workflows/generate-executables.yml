@@ -53,7 +53,7 @@ jobs:
           mv ./target/${{ matrix.name }}/release/blest.exe ./blest-${{ steps.app_version.outputs.APP_VERSION }}-${{ matrix.name }}.exe
 
       - name: Upload executable to release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: blest-${{ steps.app_version.outputs.APP_VERSION }}-${{ matrix.name }}.exe
           tag_name: ${{ steps.app_version.outputs.APP_VERSION }}
@@ -75,30 +75,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt install -y pkg-config libx11-dev libasound2-dev libudev-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
-        
-      - name: Install Rust
-        run: rustup update ${{ matrix.rust }} && rustup default ${{ matrix.rust }}
+      - name: Install toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
 
       - name: Install cross-compilation tools
         uses: taiki-e/setup-cross-toolchain-action@v1
         with:
           target: ${{ matrix.target }}
-        if: matrix.target != 'i686-unknown-linux-musl' && matrix.target != 'x86_64-unknown-linux-musl'
-
-      - name: Installing dependencies for i686-unknown-linux-musl & x86_64-unknown-linux-musl
-        run: sudo apt update && sudo apt install musl-dev musl-tools -y
-        if: matrix.target == 'i686-unknown-linux-musl' || matrix.target == 'x86_64-unknown-linux-musl'
-
-      - name: Install toolchain for i686-unknown-linux-musl & x86_64-unknown-linux-musl
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          toolchain: stable
-          targets: ${{ matrix.target }}
-        if: matrix.target == 'i686-unknown-linux-musl' || matrix.target == 'x86_64-unknown-linux-musl'
 
       - name: Set up cargo cache
         uses: actions/cache@v4
@@ -123,10 +109,63 @@ jobs:
           mv ./target/${{ matrix.target }}/release/blest ./blest-${{ steps.app_version.outputs.APP_VERSION }}-${{ matrix.target }}
 
       - name: Upload executable to release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
+        id: upload_linux_executable
         with:
           files: blest-${{ steps.app_version.outputs.APP_VERSION }}-${{ matrix.target }}
           tag_name: ${{ steps.app_version.outputs.APP_VERSION }}
+
+      - name: Replace placeholders in PKGBUILD
+        id: placeholders
+        run: |
+          file_name="blest-${{ steps.app_version.outputs.APP_VERSION }}-${{ matrix.target }}"
+          json=$(echo '${{ steps.upload_linux_executable.outputs.assets }}' | jq -r '.')
+          download_url=$(echo "$json" | jq -r ".[] | select(.name == \"$file_name\") | .browser_download_url")
+          b2sum=$(b2sum "$file_name" | awk '{print $1}')
+          case "${{ matrix.target }}" in
+            "x86_64-unknown-linux-gnu")    TARGET_ARCH="x86_64" ;;
+            "i686-unknown-linux-gnu")      TARGET_ARCH="i686" ;;
+            "aarch64-unknown-linux-gnu")   TARGET_ARCH="aarch64" ;;
+            *) echo "Unsupported architecture: ${{ matrix.target }}" && exit 1 ;;
+          esac
+          echo "TARGET=${{ matrix.target }}" >> $GITHUB_OUTPUT
+          echo "TARGET_ARCH=$TARGET_ARCH" >> $GITHUB_OUTPUT
+          echo "DOWNLOAD_URL=$download_url" >> $GITHUB_OUTPUT
+          echo "VERSION=${{ steps.app_version.outputs.APP_VERSION }}" >> $GITHUB_OUTPUT
+          echo "EXEC_B2SUM=$b2sum" >> $GITHUB_OUTPUT
+          echo "URL=$download_url" >> $GITHUB_OUTPUT
+          echo "$file_name"
+          echo "$download_url"
+          echo "$b2sum"
+        if: contains('aarch64-unknown-linux-gnu i686-unknown-linux-gnu x86_64-unknown-linux-gnu', matrix.target)
+      
+      - name: Build pacman package
+        uses: 2m/arch-pkgbuild-builder@v1.16
+        with:
+          pkgname: "build/arch/blest/"
+          target: 'pkgbuild'
+        env:
+          CARCH: "${{ steps.placeholders.outputs.TARGET_ARCH }}"
+          FILE_NAME: "${{ steps.placeholders.outputs.FILE_NAME }}"
+          TARGET: "${{ steps.placeholders.outputs.TARGET }}"
+          VERSION: "${{ steps.placeholders.outputs.VERSION }}"
+          DOWNLOAD_URL: "${{ steps.placeholders.outputs.DOWNLOAD_URL }}"
+          URL: "${{ steps.placeholders.outputs.URL }}"
+          EXEC_B2SUM: "${{ steps.placeholders.outputs.EXEC_B2SUM }}"
+        if: contains('aarch64-unknown-linux-gnu i686-unknown-linux-gnu x86_64-unknown-linux-gnu', matrix.target)
+
+      - name: Renaming package
+        run: |
+          cd build/arch/blest
+          mv "blest-${{ steps.app_version.outputs.APP_VERSION }}-1-${{ steps.placeholders.outputs.TARGET_ARCH }}.pkg.tar.zst" blest-${{ steps.app_version.outputs.APP_VERSION }}-pacman-${{ steps.placeholders.outputs.TARGET_ARCH }}.pkg.tar.zst
+        if: contains('aarch64-unknown-linux-gnu i686-unknown-linux-gnu x86_64-unknown-linux-gnu', matrix.target)
+
+      - name: Upload package to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/arch/blest/blest-${{ steps.app_version.outputs.APP_VERSION }}-pacman-${{ steps.placeholders.outputs.TARGET_ARCH }}.pkg.tar.zst
+          tag_name: ${{ steps.app_version.outputs.APP_VERSION }}
+        if: contains('aarch64-unknown-linux-gnu i686-unknown-linux-gnu x86_64-unknown-linux-gnu', matrix.target)
 
   generate-macos-executables:
     name: Build & publish for ${{ matrix.name }}
@@ -174,7 +213,7 @@ jobs:
           mv ./target/${{ matrix.name }}/release/blest ./blest-${{ steps.app_version.outputs.APP_VERSION }}-${{ matrix.name }}
 
       - name: Upload executable to release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           files: blest-${{ steps.app_version.outputs.APP_VERSION }}-${{ matrix.name }}
           tag_name: ${{ steps.app_version.outputs.APP_VERSION }}

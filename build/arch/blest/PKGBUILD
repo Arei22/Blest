@@ -1,0 +1,20 @@
+# Maintainer: Arei2 <contact@arei2.fr>
+pkgname=blest
+pkgver="$VERSION"
+pkgrel=1
+pkgdesc="A simple mine sweeper"
+arch=("$CARCH")
+url='https://github.com/arei22/Blest'
+license=('GPL-3.0')
+makedepends=()
+depends=()
+source=("$URL")
+b2sums=("$EXEC_B2SUM")
+
+package() { 
+    install -Dm755 "$srcdir/blest-${pkgver}-$TARGET" "$pkgdir/usr/bin/blest"
+    cd ../../../
+    install -Dm644 "ressources/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    install -Dm644 "ressources/blest.desktop" "$pkgdir/usr/share/applications/blest.desktop"
+    install -Dm644 "ressources/blest.webp" "$pkgdir/usr/share/icons/hicolor/256x256/apps/blest.webp"
+}
