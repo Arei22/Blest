@@ -5,10 +5,10 @@ use crate::{
 };
 use bevy::{
     ecs::{
+        hierarchy::Children,
         query::{Changed, With},
         system::{Query, ResMut},
     },
-    hierarchy::Children,
     ui::{
         Interaction,
         widget::{Button, Text},

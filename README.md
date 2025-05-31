@@ -24,7 +24,7 @@
 - [ ] Add support for new operating systems
 
 ## Contributors
-[<img width="45" src="https://avatars.githubusercontent.com/u/126862312?s=96&v=4" alt="Asthowen">](https://github.com/Arei22)
+[<img width="45" src="https://avatars.githubusercontent.com/u/126862312?s=96&v=4" alt="Arei2">](https://github.com/Arei22)
 
 ## License
-**[Blest](https://github.com/Arei22) | [GNU GENERAL PUBLIC LICENSE 3.0](https://github.com/arei22/Blest/blob/main/LICENSE.txt)**
+**[Blest](https://github.com/arei22) | [GNU GENERAL PUBLIC LICENSE 3.0](https://github.com/arei22/Blest/blob/main/LICENSE.txt)**

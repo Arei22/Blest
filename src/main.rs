@@ -7,6 +7,7 @@ use bevy::{
     render::camera::ClearColor,
     window::{Window, WindowPlugin},
 };
+use blest::systems::reset;
 use blest::{consts::r#const::BACKGROUND_COLOR, resources::resource::Grid};
 use blest::{
     consts::r#const::DIMENSION_CELL,
@@ -29,5 +30,6 @@ fn main() {
         })
         .add_systems(Startup, setup::setup_system)
         .add_systems(FixedUpdate, subcell::subcell_system)
+        .add_systems(FixedUpdate, reset::reset_system)
         .run();
 }

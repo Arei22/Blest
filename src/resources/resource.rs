@@ -1,4 +1,4 @@
-use bevy::ecs::system::Resource;
+use bevy::ecs::resource::Resource;
 
 use crate::consts::r#const::DIMENSION_CELL;
 
