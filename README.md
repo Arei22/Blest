@@ -15,7 +15,6 @@
 </div>
 
 ## TODO
-- [ ] New game button
 - [ ] Victory and defeat
 - [ ] Start menu
 - [ ] GitHub wiki
